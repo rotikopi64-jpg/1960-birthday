@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1960 Birthday</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<style>
+  :root { --gold: #ffd166; --bg: #14101c; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: #fff;
+    font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK KR", sans-serif; }
+
+  /* ---------- setup ---------- */
+  #setup { max-width: 720px; margin: 0 auto; padding: 40px 16px; display: grid; gap: 20px; }
+  h1 { font-family: Pacifico, cursive; font-size: 2.6rem; color: var(--gold); text-align: center; font-weight: 400; }
+  h1 small { display: block; font-family: inherit; font-size: 1rem; color: #aaa; margin-top: 4px; }
+  label { color: #bbb; font-size: .95rem; }
+  input[type=text] { font-size: 1.6rem; padding: 12px 16px; border-radius: 12px; border: 2px solid #444; background: #221c2e; color: #fff; width: 100%; }
+  input[type=text]:focus { outline: none; border-color: var(--gold); }
+  #drop { border: 2px dashed #666; border-radius: 12px; padding: 28px; text-align: center; cursor: pointer; color: #bbb; }
+  #drop.over, #drop:hover { border-color: var(--gold); color: #fff; }
+  #thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+  #thumbs img { height: 90px; border-radius: 8px; object-fit: cover; }
+  #thumbs:empty + #clear { display: none; }
+  #clear { color: #888; font-size: .9rem; cursor: pointer; text-decoration: underline; justify-self: start; }
+  #go { font-size: 1.6rem; padding: 18px; border-radius: 12px; border: 0; background: var(--gold); color: var(--bg); font-weight: 700; cursor: pointer; }
+  #go:disabled { opacity: .35; cursor: default; }
+  .hint { color: #777; font-size: .85rem; text-align: center; }
+
+  /* ---------- show ---------- */
+  #show { position: fixed; inset: 0; display: none; overflow: hidden; background: #000; cursor: none; user-select: none; }
+  #show.on { display: block; }
+  #stage { position: absolute; inset: 0; }
+  .slide { position: absolute; inset: 0; animation: fadein 1s; }
+  .slide .bg { position: absolute; inset: -10%; background: center / cover no-repeat; filter: blur(30px) brightness(.45); }
+  .slide .fg { position: absolute; inset: 0; background: center / contain no-repeat; animation: kb var(--kb) linear forwards; }
+  @keyframes fadein { from { opacity: 0 } }
+  @keyframes kb { to { transform: scale(1.12) } }
+
+  #confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .c { position: absolute; top: -20px; width: 10px; height: 16px; opacity: .85; border-radius: 2px; animation: fall linear infinite; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg) } }
+
+  #head { position: absolute; top: 4vh; width: 100%; text-align: center; text-shadow: 0 4px 24px rgba(0,0,0,.9); }
+  #hb { font-family: Pacifico, cursive; font-size: 5vw; color: var(--gold); line-height: 1.2; }
+  #who { font-size: 7vw; font-weight: 800; line-height: 1.1; }
+  #langs { position: absolute; top: 2vh; right: 3vw; font-size: 1.6vw; color: #999; text-shadow: 0 2px 8px #000; }
+  #langs span { margin-left: 1.2vw; }
+  #langs span.now { color: var(--gold); font-weight: 700; }
+  #lyrics { position: absolute; bottom: 6vh; width: 100%; text-align: center; font-size: 3.2vw; line-height: 1.5; text-shadow: 0 2px 12px #000, 0 0 30px #000; }
+  #lyrics div { opacity: .45; transition: opacity .3s, transform .3s; }
+  #lyrics div.now { opacity: 1; color: var(--gold); font-weight: 700; transform: scale(1.08); }
+  #brand { position: absolute; bottom: 2vh; right: 3vw; font-family: Pacifico, cursive; font-size: 2.4vw; color: rgba(255,255,255,.55); }
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <h1>1960 Birthday <small>생일 축하 슬라이드쇼 · 30초 자동 반복</small></h1>
+  <label>생일 주인공 이름 (Name)</label>
+  <input id="name" type="text" placeholder="예: 민수 / Minsu / 小明" autocomplete="off">
+  <div id="drop">📷 사진을 여기에 드래그하거나 클릭해서 선택 (여러 장 가능)</div>
+  <input id="file" type="file" accept="image/*" multiple hidden>
+  <div id="thumbs"></div>
+  <span id="clear">✕ 사진 모두 지우기</span>
+  <button id="go" disabled>▶ 시작 (전체화면)</button>
+  <p class="hint">시작하면 전체화면으로 재생되고 30초마다 반복됩니다. 끝내려면 화면 클릭 또는 Esc.</p>
+</div>
+
+<div id="show">
+  <div id="stage"></div>
+  <div id="confetti"></div>
+  <div id="head"><div id="hb">Happy Birthday</div><div id="who"></div></div>
+  <div id="langs"><span>English</span><span>中文</span><span>한국어</span></div>
+  <div id="lyrics"></div>
+  <div id="brand">1960</div>
+</div>
+
+<script>
+const VERSE_SEC = 10;                 // 언어당 10초 × 3 = 30초 (템포는 여기서 조절)
+const LANGS = 3;
+const LYRICS = n => [
+  ['Happy birthday to you', 'Happy birthday to you', `Happy birthday dear ${n}`, 'Happy birthday to you'],
+  ['祝你生日快乐', '祝你生日快乐', `祝 ${n} 生日快乐`, '祝你生日快乐'],
+  ['생일 축하합니다', '생일 축하합니다', `사랑하는 ${n}`, '생일 축하합니다'],
+];
+
+// Happy Birthday in C major, 3/4. [midi, start beat, beats]. 24 beats per verse, 6 per lyric line.
+const MELODY = [
+  [67,0,.75],[67,.75,.25],[69,1,1],[67,2,1],[72,3,1],[71,4,2],
+  [67,6,.75],[67,6.75,.25],[69,7,1],[67,8,1],[74,9,1],[72,10,2],
+  [67,12,.75],[67,12.75,.25],[79,13,1],[76,14,1],[72,15,1],[71,16,1],[69,17,1],
+  [77,18,.75],[77,18.75,.25],[76,19,1],[72,20,1],[74,21,1],[72,22,2],
+];
+const Cm = [36,48,52,55], G7 = [43,47,50,53], Fm = [41,45,48,53];   // [bass, ...chord]
+const CHORDS = [[Cm,1,3],[G7,4,3],[G7,7,3],[Cm,10,3],[Cm,13,3],[Fm,16,3],[Cm,19,2],[G7,21,1],[Cm,22,2]];
+console.assert(Math.max(...MELODY.map(([, s, d]) => s + d)) === 24, 'verse must be 24 beats');
+
+const $ = id => document.getElementById(id);
+const photos = [];
+
+// ---------- setup ----------
+function addFiles(files) {
+  for (const f of files) if (f.type.startsWith('image/')) {
+    const u = URL.createObjectURL(f);
+    photos.push(u);
+    $('thumbs').insertAdjacentHTML('beforeend', `<img src="${u}">`);
+  }
+}
+$('drop').onclick = () => $('file').click();
+$('file').onchange = () => { addFiles($('file').files); $('file').value = ''; };
+$('drop').ondragover = e => { e.preventDefault(); $('drop').classList.add('over'); };
+$('drop').ondragleave = () => $('drop').classList.remove('over');
+$('drop').ondrop = e => { e.preventDefault(); $('drop').classList.remove('over'); addFiles(e.dataTransfer.files); };
+$('clear').onclick = () => { photos.length = 0; $('thumbs').innerHTML = ''; };
+$('name').oninput = () => $('go').disabled = !$('name').value.trim();
+$('go').onclick = play;
+
+const COLORS = ['#ffd166', '#ef476f', '#06d6a0', '#118ab2', '#ffffff'];
+for (let i = 0; i < 70; i++) {
+  const c = document.createElement('i'); c.className = 'c';
+  c.style.cssText = `left:${Math.random() * 100}vw;background:${COLORS[i % 5]};width:${6 + Math.random() * 8}px;` +
+    `animation-duration:${4 + Math.random() * 6}s;animation-delay:${-Math.random() * 10}s`;
+  $('confetti').append(c);
+}
+
+// ---------- audio (music-box style synth) ----------
+let ctx, out;
+function tone(midi, t, dur, gain, type, pluck) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.value = 440 * 2 ** ((midi - 69) / 12);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.015);
+  if (pluck) g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  else { g.gain.setValueAtTime(gain, t + dur - 0.1); g.gain.linearRampToValueAtTime(0.0001, t + dur); }
+  o.connect(g).connect(out);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+function scheduleVerse(T0) {
+  const b = VERSE_SEC / 24;
+  for (const [m, s, d] of MELODY) {
+    const ring = Math.max(d * b, 0.4) * 1.5;
+    tone(m, T0 + s * b, ring, .32, 'sine', true);
+    tone(m + 12, T0 + s * b, ring * .6, .07, 'triangle', true);
+  }
+  for (const [notes, s, d] of CHORDS)
+    notes.forEach((m, i) => tone(m, T0 + s * b, d * b, i ? .045 : .11, i ? 'sine' : 'triangle', false));
+}
+
+// ---------- show ----------
+const ORIGINS = ['30% 30%', '70% 40%', '50% 70%', '35% 60%', '65% 65%', '50% 35%'];
+let t0, raf, scheduled, slot, verse, line;
+function showSlide(i, dur) {
+  const url = photos[i % photos.length];
+  const d = document.createElement('div'); d.className = 'slide';
+  d.innerHTML = `<div class="bg" style="background-image:url(${url})"></div>` +
+    `<div class="fg" style="background-image:url(${url});--kb:${dur + 1}s;transform-origin:${ORIGINS[i % ORIGINS.length]}"></div>`;
+  $('stage').append(d);
+  while ($('stage').children.length > 2) $('stage').firstChild.remove();
+}
+function tick() {
+  const T = VERSE_SEC * LANGS, el = ctx.currentTime - t0;
+  while (scheduled * VERSE_SEC < el + 2) scheduleVerse(t0 + scheduled++ * VERSE_SEC);   // 2s lookahead, loops forever
+  const t = Math.max(0, el) % T;
+
+  const v = Math.floor(t / VERSE_SEC), ln = Math.floor((t % VERSE_SEC) / (VERSE_SEC / 4));
+  if (v !== verse) {
+    verse = v; line = -1;
+    $('lyrics').innerHTML = LYRICS($('name').value.trim())[v].map(l => `<div>${l}</div>`).join('');
+    [...$('langs').children].forEach((s, i) => s.classList.toggle('now', i === v));
+  }
+  if (ln !== line) { line = ln; [...$('lyrics').children].forEach((d, i) => d.classList.toggle('now', i === ln)); }
+
+  if (photos.length) {
+    const slots = Math.max(photos.length, 6), s = Math.floor(t / (T / slots));
+    if (s !== slot) { slot = s; showSlide(s, T / slots); }
+  }
+  raf = requestAnimationFrame(tick);
+}
+function play() {
+  ctx = new AudioContext(); out = ctx.createDynamicsCompressor(); out.connect(ctx.destination);
+  t0 = ctx.currentTime + 0.3; scheduled = 0; slot = verse = line = -1;
+  $('who').textContent = $('name').value.trim();
+  $('show').classList.add('on');
+  document.documentElement.requestFullscreen?.().catch(() => {});
+  tick();
+}
+function stop() {
+  if (!ctx) return;
+  cancelAnimationFrame(raf); ctx.close(); ctx = null;
+  $('show').classList.remove('on'); $('stage').innerHTML = '';
+  if (document.fullscreenElement) document.exitFullscreen();
+}
+$('show').onclick = stop;
+document.addEventListener('keydown', e => e.key === 'Escape' && stop());
+document.addEventListener('fullscreenchange', () => !document.fullscreenElement && stop());
+</script>
+</body>
+</html>
