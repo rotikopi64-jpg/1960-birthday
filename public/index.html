@@ -37,6 +37,7 @@
   <h1>1960 Birthday <small>생일 축하 노래 슬라이드쇼 · English → 中文 → 한국어 · 30초 반복</small></h1>
   <label>생일 주인공 이름 (Name)</label>
   <input id="name" type="text" placeholder="예: 민수 / Minsu / 小明" autocomplete="off">
+  <button id="mic" class="alt" style="font-size:1rem;padding:10px">🎤 이름 직접 녹음 — 자동 음성 대신 직원 목소리로 이름을 부르게 하기</button>
   <div id="drop">📷 사진을 여기에 드래그하거나 클릭해서 선택 (여러 장 가능)</div>
   <input id="file" type="file" accept="image/*" multiple hidden>
   <div id="thumbs"></div>
@@ -44,7 +45,7 @@
   <button id="go" disabled>▶ 시작 (전체화면, 끌 때까지 반복)</button>
   <button id="rec" class="alt" disabled>💾 동영상 파일 만들기 (30초 녹화 후 저장)</button>
   <button id="share" class="alt" hidden></button>
-  <p id="status" class="hint">시작하면 전체화면으로 재생되고 30초마다 반복됩니다. 끝내려면 화면 클릭 또는 Esc.<br>이름은 노래 가사 안에서 직접 불러줍니다.</p>
+  <p id="status" class="hint">시작하면 전체화면으로 재생되고 30초마다 반복됩니다. 끝내려면 화면 클릭 또는 Esc.<br>이름은 노래 속에서 직접 불러줍니다 (자동 음성 → 안 되면 🎤 녹음 또는 브라우저 음성).</p>
 </div>
 
 <div id="show"><canvas id="cv" width="1920" height="1080"></canvas></div>
@@ -81,7 +82,7 @@ const voicesReady = Promise.all(LANGS.map(async l => {
     try { clips[l][k] = await loadClip(`voice/${l}/${encodeURIComponent(k)}.wav`); } catch (e) { console.warn('voice', l, k, e); }
   }));
 }));
-let nameClips = { key: '', p: Promise.resolve() };
+let nameClips = { key: '', p: Promise.resolve() }, micClip;
 function prefetchName() {
   const n = $('name').value.trim();
   if (!n || n === nameClips.key) return;
@@ -92,7 +93,7 @@ function prefetchName() {
 }
 function buildVocals() {
   const out = new Float32Array(T * VSR);
-  LANGS.forEach((l, i) => out.set(Sing.renderVerse(Sing.SONG[l], k => k === '*' ? nameClips[l] : clips[l][k], BEAT, TRANSPOSE, VSR).subarray(0, VERSE_SEC * VSR), i * VERSE_SEC * VSR));
+  LANGS.forEach((l, i) => out.set(Sing.renderVerse(Sing.SONG[l], k => k === '*' ? (micClip || nameClips[l]) : clips[l][k], BEAT, TRANSPOSE, VSR).subarray(0, VERSE_SEC * VSR), i * VERSE_SEC * VSR));
   const buf = ctx.createBuffer(1, out.length, VSR); buf.copyToChannel(out, 0); return buf;
 }
 function speak(l) {                                   // fallback when the name could not be synthesized: say it at the right moment
@@ -125,6 +126,19 @@ let typing;
 $('name').oninput = () => { $('go').disabled = $('rec').disabled = !$('name').value.trim(); clearTimeout(typing); typing = setTimeout(prefetchName, 500); };
 $('go').onclick = () => play(false);
 $('rec').onclick = () => play(true);
+$('mic').onclick = async () => {                       // 1.8 s mic take of the name; pitch-corrected into the song like the other syllables
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true }), rec = new MediaRecorder(stream), chunks = [];
+    rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const ab = await dec.decodeAudioData(await new Blob(chunks).arrayBuffer()), an = Sing.analyze(ab.getChannelData(0), ab.sampleRate);
+      if (an.b - an.a < 0.08) return status('목소리가 감지되지 않았어요. 🎤 버튼을 누르고 바로 이름을 말해 주세요.');
+      micClip = an; status('이름 녹음 완료 ✓ 이 목소리로 노래 속 이름을 부릅니다. (다시 누르면 재녹음)');
+    };
+    status('🔴 지금 이름을 말하세요…'); rec.start(); setTimeout(() => rec.stop(), 1800);
+  } catch (e) { status('마이크를 사용할 수 없습니다: ' + e.message); }
+};
 
 // ---------- audio: music-box backing (Web Audio) + sung vocals (buffer) ----------
 const MELODY = [
@@ -204,7 +218,7 @@ function tick() {
   if (recorder && recorder.state === 'inactive' && el >= 0) recorder.start();
   for (const l in NAME_BEAT) {
     const at = LANGS.indexOf(l) * VERSE_SEC + NAME_BEAT[l] * BEAT - 0.15;
-    if (!nameClips[l] && t >= at && t < at + 0.5 && !spoken.has(cycle + l)) { spoken.add(cycle + l); speak(l); }
+    if (!micClip && !nameClips[l] && t >= at && t < at + 0.5 && !spoken.has(cycle + l)) { spoken.add(cycle + l); speak(l); }
   }
   if (mode === 'rec' && el >= T + 0.2) { const r = recorder; recorder = null; r.stop(); stop(); return; }
   raf = requestAnimationFrame(tick);
