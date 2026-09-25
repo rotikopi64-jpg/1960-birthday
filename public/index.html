@@ -10,11 +10,9 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: var(--bg); color: #fff;
     font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK KR", sans-serif; }
-
-  /* ---------- setup ---------- */
-  #setup { max-width: 720px; margin: 0 auto; padding: 40px 16px; display: grid; gap: 20px; }
+  #setup { max-width: 720px; margin: 0 auto; padding: 40px 16px; display: grid; gap: 18px; }
   h1 { font-family: Pacifico, cursive; font-size: 2.6rem; color: var(--gold); text-align: center; font-weight: 400; }
-  h1 small { display: block; font-family: inherit; font-size: 1rem; color: #aaa; margin-top: 4px; }
+  h1 small { display: block; font-size: 1rem; color: #aaa; margin-top: 4px; }
   label { color: #bbb; font-size: .95rem; }
   input[type=text] { font-size: 1.6rem; padding: 12px 16px; border-radius: 12px; border: 2px solid #444; background: #221c2e; color: #fff; width: 100%; }
   input[type=text]:focus { outline: none; border-color: var(--gold); }
@@ -24,88 +22,97 @@
   #thumbs img { height: 90px; border-radius: 8px; object-fit: cover; }
   #thumbs:empty + #clear { display: none; }
   #clear { color: #888; font-size: .9rem; cursor: pointer; text-decoration: underline; justify-self: start; }
-  #go { font-size: 1.6rem; padding: 18px; border-radius: 12px; border: 0; background: var(--gold); color: var(--bg); font-weight: 700; cursor: pointer; }
-  #go:disabled { opacity: .35; cursor: default; }
-  .hint { color: #777; font-size: .85rem; text-align: center; }
-
-  /* ---------- show ---------- */
-  #show { position: fixed; inset: 0; display: none; overflow: hidden; background: #000; cursor: none; user-select: none; }
+  button { font-size: 1.4rem; padding: 16px; border-radius: 12px; border: 0; background: var(--gold); color: var(--bg); font-weight: 700; cursor: pointer; }
+  button.alt { background: #2c2540; color: #fff; border: 2px solid #4a4160; }
+  button:disabled { opacity: .35; cursor: default; }
+  .hint { color: #888; font-size: .9rem; text-align: center; line-height: 1.5; }
+  #show { position: fixed; inset: 0; display: none; background: #000; cursor: none; user-select: none; }
   #show.on { display: block; }
-  #stage { position: absolute; inset: 0; }
-  .slide { position: absolute; inset: 0; animation: fadein 1s; }
-  .slide .bg { position: absolute; inset: -10%; background: center / cover no-repeat; filter: blur(30px) brightness(.45); }
-  .slide .fg { position: absolute; inset: 0; background: center / contain no-repeat; animation: kb var(--kb) linear forwards; }
-  @keyframes fadein { from { opacity: 0 } }
-  @keyframes kb { to { transform: scale(1.12) } }
-
-  #confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-  .c { position: absolute; top: -20px; width: 10px; height: 16px; opacity: .85; border-radius: 2px; animation: fall linear infinite; }
-  @keyframes fall { to { transform: translateY(110vh) rotate(720deg) } }
-
-  #head { position: absolute; top: 4vh; width: 100%; text-align: center; text-shadow: 0 4px 24px rgba(0,0,0,.9); }
-  #hb { font-family: Pacifico, cursive; font-size: 5vw; color: var(--gold); line-height: 1.2; }
-  #who { font-size: 7vw; font-weight: 800; line-height: 1.1; }
-  #langs { position: absolute; top: 2vh; right: 3vw; font-size: 1.6vw; color: #999; text-shadow: 0 2px 8px #000; }
-  #langs span { margin-left: 1.2vw; }
-  #langs span.now { color: var(--gold); font-weight: 700; }
-  #lyrics { position: absolute; bottom: 6vh; width: 100%; text-align: center; font-size: 3.2vw; line-height: 1.5; text-shadow: 0 2px 12px #000, 0 0 30px #000; }
-  #lyrics div { opacity: .45; transition: opacity .3s, transform .3s; }
-  #lyrics div.now { opacity: 1; color: var(--gold); font-weight: 700; transform: scale(1.08); }
-  #brand { position: absolute; bottom: 2vh; right: 3vw; font-family: Pacifico, cursive; font-size: 2.4vw; color: rgba(255,255,255,.55); }
+  #cv { width: 100%; height: 100%; object-fit: contain; display: block; }
 </style>
 </head>
 <body>
 
 <div id="setup">
-  <h1>1960 Birthday <small>생일 축하 슬라이드쇼 · 30초 자동 반복</small></h1>
+  <h1>1960 Birthday <small>생일 축하 노래 슬라이드쇼 · English → 中文 → 한국어 · 30초 반복</small></h1>
   <label>생일 주인공 이름 (Name)</label>
   <input id="name" type="text" placeholder="예: 민수 / Minsu / 小明" autocomplete="off">
   <div id="drop">📷 사진을 여기에 드래그하거나 클릭해서 선택 (여러 장 가능)</div>
   <input id="file" type="file" accept="image/*" multiple hidden>
   <div id="thumbs"></div>
   <span id="clear">✕ 사진 모두 지우기</span>
-  <button id="go" disabled>▶ 시작 (전체화면)</button>
-  <p class="hint">시작하면 전체화면으로 재생되고 30초마다 반복됩니다. 끝내려면 화면 클릭 또는 Esc.</p>
+  <button id="go" disabled>▶ 시작 (전체화면, 끌 때까지 반복)</button>
+  <button id="rec" class="alt" disabled>💾 동영상 파일 만들기 (30초 녹화 후 저장)</button>
+  <button id="share" class="alt" hidden></button>
+  <p id="status" class="hint">시작하면 전체화면으로 재생되고 30초마다 반복됩니다. 끝내려면 화면 클릭 또는 Esc.<br>이름은 노래 가사 안에서 직접 불러줍니다.</p>
 </div>
 
-<div id="show">
-  <div id="stage"></div>
-  <div id="confetti"></div>
-  <div id="head"><div id="hb">Happy Birthday</div><div id="who"></div></div>
-  <div id="langs"><span>English</span><span>中文</span><span>한국어</span></div>
-  <div id="lyrics"></div>
-  <div id="brand">1960</div>
-</div>
+<div id="show"><canvas id="cv" width="1920" height="1080"></canvas></div>
 
+<script src="sing.js"></script>
 <script>
-const VERSE_SEC = 10;                 // 언어당 10초 × 3 = 30초 (템포는 여기서 조절)
-const LANGS = 3;
-const LYRICS = n => [
-  ['Happy birthday to you', 'Happy birthday to you', `Happy birthday dear ${n}`, 'Happy birthday to you'],
-  ['祝你生日快乐', '祝你生日快乐', `祝 ${n} 生日快乐`, '祝你生日快乐'],
-  ['생일 축하합니다', '생일 축하합니다', `사랑하는 ${n}`, '생일 축하합니다'],
-];
+const VERSE_SEC = 10, LANGS = ['en', 'zh', 'ko'], T = VERSE_SEC * LANGS.length, BEAT = VERSE_SEC / 24;
+const TRANSPOSE = -14;            // Bb major (F3–F4): where the TTS voices sound most natural. Change to taste.
+const VSR = 24000;                // voice clip sample rate
+const W = 1920, H = 1080, SYS = '-apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "PingFang SC", "Microsoft YaHei", sans-serif';
+const LYRICS = n => ({
+  en: ['Happy birthday to you', 'Happy birthday to you', `Happy birthday dear ${n}`, 'Happy birthday to you'],
+  zh: ['祝你生日快乐', '祝你生日快乐', '祝你生日快乐', '祝你生日快乐'],
+  ko: ['생일 축하합니다', '생일 축하합니다', `사랑하는 ${n}`, '생일 축하합니다'],
+});
+const LABEL = { en: 'English', zh: '中文', ko: '한국어' };
+const NAME_BEAT = { en: 16, ko: 16 };            // where the name is sung; used for the spoken fallback
 
-// Happy Birthday in C major, 3/4. [midi, start beat, beats]. 24 beats per verse, 6 per lyric line.
-const MELODY = [
-  [67,0,.75],[67,.75,.25],[69,1,1],[67,2,1],[72,3,1],[71,4,2],
-  [67,6,.75],[67,6.75,.25],[69,7,1],[67,8,1],[74,9,1],[72,10,2],
-  [67,12,.75],[67,12.75,.25],[79,13,1],[76,14,1],[72,15,1],[71,16,1],[69,17,1],
-  [77,18,.75],[77,18.75,.25],[76,19,1],[72,20,1],[74,21,1],[72,22,2],
-];
-const Cm = [36,48,52,55], G7 = [43,47,50,53], Fm = [41,45,48,53];   // [bass, ...chord]
-const CHORDS = [[Cm,1,3],[G7,4,3],[G7,7,3],[Cm,10,3],[Cm,13,3],[Fm,16,3],[Cm,19,2],[G7,21,1],[Cm,22,2]];
-console.assert(Math.max(...MELODY.map(([, s, d]) => s + d)) === 24, 'verse must be 24 beats');
+const $ = id => document.getElementById(id), status = s => $('status').innerHTML = s;
+let name = '';
 
-const $ = id => document.getElementById(id);
-const photos = [];
+// ---------- voices: syllable clips (static) + the name (Workers AI TTS, prefetched while typing) ----------
+const clips = {}, dec = new OfflineAudioContext(1, 1, VSR);
+async function loadClip(url, ms = 8000) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
+  const r = await fetch(url, { signal: ctl.signal }).finally(() => clearTimeout(timer));
+  if (!r.ok) throw new Error(url + ' ' + r.status);
+  const ab = await dec.decodeAudioData(await r.arrayBuffer());
+  return Sing.analyze(ab.getChannelData(0), ab.sampleRate);
+}
+const voicesReady = Promise.all(LANGS.map(async l => {
+  clips[l] = {};
+  await Promise.all([...new Set(Sing.SONG[l].map(([k]) => k))].filter(k => k !== '*').map(async k => {
+    try { clips[l][k] = await loadClip(`voice/${l}/${encodeURIComponent(k)}.wav`); } catch (e) { console.warn('voice', l, k, e); }
+  }));
+}));
+let nameClips = { key: '', p: Promise.resolve() };
+function prefetchName() {
+  const n = $('name').value.trim();
+  if (!n || n === nameClips.key) return;
+  nameClips = { key: n };
+  nameClips.p = Promise.all(Object.keys(NAME_BEAT).map(async l => {
+    try { nameClips[l] = await loadClip(`/tts?text=${encodeURIComponent(n)}&lang=${l}`, 6000); } catch (e) { console.warn('name tts', l, e); }
+  }));
+}
+function buildVocals() {
+  const out = new Float32Array(T * VSR);
+  LANGS.forEach((l, i) => out.set(Sing.renderVerse(Sing.SONG[l], k => k === '*' ? nameClips[l] : clips[l][k], BEAT, TRANSPOSE, VSR).subarray(0, VERSE_SEC * VSR), i * VERSE_SEC * VSR));
+  const buf = ctx.createBuffer(1, out.length, VSR); buf.copyToChannel(out, 0); return buf;
+}
+function speak(l) {                                   // fallback when the name could not be synthesized: say it at the right moment
+  if (!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(name); u.lang = l === 'ko' ? 'ko-KR' : 'en-US'; u.rate = .85; u.pitch = 1.15; speechSynthesis.speak(u);
+}
 
 // ---------- setup ----------
+const ORIGINS = [[.3, .3], [.7, .4], [.5, .7], [.35, .6], [.65, .65], [.5, .35]], photos = [];
 function addFiles(files) {
   for (const f of files) if (f.type.startsWith('image/')) {
-    const u = URL.createObjectURL(f);
-    photos.push(u);
-    $('thumbs').insertAdjacentHTML('beforeend', `<img src="${u}">`);
+    const url = URL.createObjectURL(f), img = new Image(); img.src = url;
+    const p = { img, origin: ORIGINS[photos.length % ORIGINS.length] };
+    p.ready = img.decode().then(() => {                // tiny copy scaled up twice = cheap blurred backdrop
+      const a = document.createElement('canvas'), b = document.createElement('canvas'); a.width = 32; a.height = 18; b.width = 256; b.height = 144;
+      const r = Math.max(32 / img.width, 18 / img.height);
+      a.getContext('2d').drawImage(img, (32 - img.width * r) / 2, (18 - img.height * r) / 2, img.width * r, img.height * r);
+      b.getContext('2d').drawImage(a, 0, 0, 256, 144); p.blur = b;
+    }).catch(() => {});
+    photos.push(p); $('thumbs').insertAdjacentHTML('beforeend', `<img src="${url}">`);
   }
 }
 $('drop').onclick = () => $('file').click();
@@ -114,22 +121,24 @@ $('drop').ondragover = e => { e.preventDefault(); $('drop').classList.add('over'
 $('drop').ondragleave = () => $('drop').classList.remove('over');
 $('drop').ondrop = e => { e.preventDefault(); $('drop').classList.remove('over'); addFiles(e.dataTransfer.files); };
 $('clear').onclick = () => { photos.length = 0; $('thumbs').innerHTML = ''; };
-$('name').oninput = () => $('go').disabled = !$('name').value.trim();
-$('go').onclick = play;
+let typing;
+$('name').oninput = () => { $('go').disabled = $('rec').disabled = !$('name').value.trim(); clearTimeout(typing); typing = setTimeout(prefetchName, 500); };
+$('go').onclick = () => play(false);
+$('rec').onclick = () => play(true);
 
-const COLORS = ['#ffd166', '#ef476f', '#06d6a0', '#118ab2', '#ffffff'];
-for (let i = 0; i < 70; i++) {
-  const c = document.createElement('i'); c.className = 'c';
-  c.style.cssText = `left:${Math.random() * 100}vw;background:${COLORS[i % 5]};width:${6 + Math.random() * 8}px;` +
-    `animation-duration:${4 + Math.random() * 6}s;animation-delay:${-Math.random() * 10}s`;
-  $('confetti').append(c);
-}
-
-// ---------- audio (music-box style synth) ----------
-let ctx, out;
+// ---------- audio: music-box backing (Web Audio) + sung vocals (buffer) ----------
+const MELODY = [
+  [67,0,.75],[67,.75,.25],[69,1,1],[67,2,1],[72,3,1],[71,4,2],
+  [67,6,.75],[67,6.75,.25],[69,7,1],[67,8,1],[74,9,1],[72,10,2],
+  [67,12,.75],[67,12.75,.25],[79,13,1],[76,14,1],[72,15,1],[71,16,1],[69,17,1],
+  [77,18,.75],[77,18.75,.25],[76,19,1],[72,20,1],[74,21,1],[72,22,2],
+];
+const Cm = [48,55,60,64], G7 = [55,59,62,65], Fm = [53,57,60,65];   // [bass, ...chord], C major register; shifted with the song
+const CHORDS = [[Cm,1,3],[G7,4,3],[G7,7,3],[Cm,10,3],[Cm,13,3],[Fm,16,3],[Cm,19,2],[G7,21,1],[Cm,22,2]];
+let ctx, out, t0, raf, scheduled, vocals, recorder, mode, spoken;
 function tone(midi, t, dur, gain, type, pluck) {
   const o = ctx.createOscillator(), g = ctx.createGain();
-  o.type = type; o.frequency.value = 440 * 2 ** ((midi - 69) / 12);
+  o.type = type; o.frequency.value = Sing.midiHz(midi);
   g.gain.setValueAtTime(0.0001, t);
   g.gain.linearRampToValueAtTime(gain, t + 0.015);
   if (pluck) g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
@@ -138,63 +147,115 @@ function tone(midi, t, dur, gain, type, pluck) {
   o.start(t); o.stop(t + dur + 0.02);
 }
 function scheduleVerse(T0) {
-  const b = VERSE_SEC / 24;
-  for (const [m, s, d] of MELODY) {
-    const ring = Math.max(d * b, 0.4) * 1.5;
-    tone(m, T0 + s * b, ring, .32, 'sine', true);
-    tone(m + 12, T0 + s * b, ring * .6, .07, 'triangle', true);
-  }
-  for (const [notes, s, d] of CHORDS)
-    notes.forEach((m, i) => tone(m, T0 + s * b, d * b, i ? .045 : .11, i ? 'sine' : 'triangle', false));
+  const k = TRANSPOSE + 12;                                              // backing sits an octave above the voice
+  for (const [m, s, d] of MELODY) tone(m + k, T0 + s * BEAT, Math.max(d * BEAT, 0.4) * 1.5, .12, 'sine', true);
+  for (const [notes, s, d] of CHORDS) notes.forEach((m, i) => tone(m + k, T0 + s * BEAT, d * BEAT, i ? .04 : .09, i ? 'sine' : 'triangle', false));
+}
+function scheduleCycle(T0) {
+  LANGS.forEach((_, i) => scheduleVerse(T0 + i * VERSE_SEC));
+  const s = ctx.createBufferSource(); s.buffer = vocals; s.connect(out); s.start(T0);
 }
 
-// ---------- show ----------
-const ORIGINS = ['30% 30%', '70% 40%', '50% 70%', '35% 60%', '65% 65%', '50% 35%'];
-let t0, raf, scheduled, slot, verse, line;
-function showSlide(i, dur) {
-  const url = photos[i % photos.length];
-  const d = document.createElement('div'); d.className = 'slide';
-  d.innerHTML = `<div class="bg" style="background-image:url(${url})"></div>` +
-    `<div class="fg" style="background-image:url(${url});--kb:${dur + 1}s;transform-origin:${ORIGINS[i % ORIGINS.length]}"></div>`;
-  $('stage').append(d);
-  while ($('stage').children.length > 2) $('stage').firstChild.remove();
+// ---------- show (canvas, so it can also be recorded) ----------
+const g = $('cv').getContext('2d'), COLORS = ['#ffd166', '#ef476f', '#06d6a0', '#118ab2', '#ffffff'];
+const CONF = Array.from({ length: 80 }, (_, i) => ({ x: Math.random() * W, y: Math.random() * H, w: 8 + Math.random() * 10, h: 14 + Math.random() * 8,
+  c: COLORS[i % 5], v: 90 + Math.random() * 120, r: Math.random() * 6, s: Math.random() * 6 }));
+function drawSlide(p, age, iv, alpha) {
+  g.globalAlpha = alpha;
+  g.drawImage(p.blur, 0, 0, W, H);
+  g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(0, 0, W, H);
+  const sc = 1 + 0.12 * Math.min(1, age / (iv + 1)), r = Math.min(W / p.img.width, H / p.img.height), w = p.img.width * r, h = p.img.height * r;
+  g.save(); g.translate(p.origin[0] * W, p.origin[1] * H); g.scale(sc, sc); g.translate(-p.origin[0] * W, -p.origin[1] * H);
+  g.drawImage(p.img, (W - w) / 2, (H - h) / 2, w, h); g.restore();
+  g.globalAlpha = 1;
+}
+function draw(t) {
+  g.fillStyle = '#14101c'; g.fillRect(0, 0, W, H);
+  const list = photos.filter(p => p.blur);
+  if (list.length) {
+    const slots = Math.max(list.length, 6), iv = T / slots, s = Math.floor(t / iv), age = t - s * iv;
+    if (age < 1) drawSlide(list[((s + slots - 1) % slots) % list.length], iv + age, iv, 1);
+    drawSlide(list[s % list.length], age, iv, Math.min(1, age));
+  }
+  g.globalAlpha = .85;
+  for (const c of CONF) {
+    g.save(); g.translate(c.x + 40 * Math.sin(t * 1.2 + c.s), (c.y + c.v * t) % (H + 60) - 30); g.rotate(c.r + t * 2.5);
+    g.fillStyle = c.c; g.fillRect(-c.w / 2, -c.h / 2, c.w, c.h); g.restore();
+  }
+  g.globalAlpha = 1;
+  const v = Math.floor(t / VERSE_SEC), ln = Math.floor((t % VERSE_SEC) / (VERSE_SEC / 4)), lang = LANGS[v];
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = 'rgba(0,0,0,.9)'; g.shadowBlur = 24; g.shadowOffsetY = 4;
+  g.fillStyle = '#ffd166'; g.font = '96px Pacifico, cursive'; g.fillText('Happy Birthday', W / 2, 120);
+  g.fillStyle = '#fff'; g.font = `800 140px ${SYS}`; g.fillText(name, W / 2, 265);
+  LYRICS(name)[lang].forEach((l, i) => {
+    const on = i === ln; g.fillStyle = on ? '#ffd166' : 'rgba(255,255,255,.5)'; g.font = `${on ? '700 70px' : '400 60px'} ${SYS}`;
+    g.fillText(l, W / 2, H - 330 + i * 82);
+  });
+  g.textAlign = 'right'; g.font = `600 30px ${SYS}`; let x = W - 50;
+  for (const l of [...LANGS].reverse()) { g.fillStyle = l === lang ? '#ffd166' : 'rgba(255,255,255,.55)'; g.fillText(LABEL[l], x, 55); x -= g.measureText(LABEL[l]).width + 36; }
+  g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '46px Pacifico, cursive'; g.fillText('1960', W - 50, H - 45);
+  g.shadowBlur = 0; g.shadowOffsetY = 0;
 }
 function tick() {
-  const T = VERSE_SEC * LANGS, el = ctx.currentTime - t0;
-  while (scheduled * VERSE_SEC < el + 2) scheduleVerse(t0 + scheduled++ * VERSE_SEC);   // 2s lookahead, loops forever
-  const t = Math.max(0, el) % T;
-
-  const v = Math.floor(t / VERSE_SEC), ln = Math.floor((t % VERSE_SEC) / (VERSE_SEC / 4));
-  if (v !== verse) {
-    verse = v; line = -1;
-    $('lyrics').innerHTML = LYRICS($('name').value.trim())[v].map(l => `<div>${l}</div>`).join('');
-    [...$('langs').children].forEach((s, i) => s.classList.toggle('now', i === v));
+  const el = ctx.currentTime - t0;
+  while (scheduled * T < el + 2) scheduleCycle(t0 + scheduled++ * T);      // 2 s lookahead, loops until stopped
+  const t = Math.max(0, el) % T, cycle = Math.floor(Math.max(0, el) / T);
+  draw(t);
+  if (recorder && recorder.state === 'inactive' && el >= 0) recorder.start();
+  for (const l in NAME_BEAT) {
+    const at = LANGS.indexOf(l) * VERSE_SEC + NAME_BEAT[l] * BEAT - 0.15;
+    if (!nameClips[l] && t >= at && t < at + 0.5 && !spoken.has(cycle + l)) { spoken.add(cycle + l); speak(l); }
   }
-  if (ln !== line) { line = ln; [...$('lyrics').children].forEach((d, i) => d.classList.toggle('now', i === ln)); }
-
-  if (photos.length) {
-    const slots = Math.max(photos.length, 6), s = Math.floor(t / (T / slots));
-    if (s !== slot) { slot = s; showSlide(s, T / slots); }
-  }
+  if (mode === 'rec' && el >= T + 0.2) { const r = recorder; recorder = null; r.stop(); stop(); return; }
   raf = requestAnimationFrame(tick);
 }
-function play() {
+async function play(record) {
+  if (ctx) return;
+  mode = record ? 'rec' : 'play'; name = $('name').value.trim(); prefetchName();
   ctx = new AudioContext(); out = ctx.createDynamicsCompressor(); out.connect(ctx.destination);
-  t0 = ctx.currentTime + 0.3; scheduled = 0; slot = verse = line = -1;
-  $('who').textContent = $('name').value.trim();
-  $('show').classList.add('on');
-  document.documentElement.requestFullscreen?.().catch(() => {});
+  $('show').classList.add('on'); $('show').requestFullscreen?.().catch(() => {});
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.fillStyle = '#aaa'; g.font = `40px ${SYS}`; g.textAlign = 'center'; g.fillText('준비 중…', W / 2, H / 2);
+  status(record ? '녹화 준비 중…' : '준비 중…');
+  await Promise.all([voicesReady, nameClips.p, document.fonts.load('96px Pacifico').catch(() => {}), ...photos.map(p => p.ready)]);
+  if (!ctx) return;                                                       // stopped while loading
+  vocals = buildVocals();
+  if (record) startRecording();
+  t0 = ctx.currentTime + 0.3; scheduled = 0; spoken = new Set();
+  status(record ? '녹화 중… 30초 후 자동으로 파일이 만들어집니다.' : '재생 중 (화면 클릭 또는 Esc로 종료)');
   tick();
 }
 function stop() {
   if (!ctx) return;
-  cancelAnimationFrame(raf); ctx.close(); ctx = null;
-  $('show').classList.remove('on'); $('stage').innerHTML = '';
-  if (document.fullscreenElement) document.exitFullscreen();
+  cancelAnimationFrame(raf);
+  if (recorder && recorder.state !== 'inactive') { recorder.onstop = null; recorder.stop(); status('녹화가 중간에 취소되었습니다.'); }
+  recorder = null; ctx.close(); ctx = null; window.speechSynthesis?.cancel();
+  $('show').classList.remove('on');
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (mode === 'play') status('시작하면 전체화면으로 재생되고 30초마다 반복됩니다. 끝내려면 화면 클릭 또는 Esc.');
 }
 $('show').onclick = stop;
 document.addEventListener('keydown', e => e.key === 'Escape' && stop());
 document.addEventListener('fullscreenchange', () => !document.fullscreenElement && stop());
+
+// ---------- export: record one 30 s cycle of the canvas + audio, then download or share ----------
+let outFile;
+function startRecording() {
+  const dest = ctx.createMediaStreamDestination(); out.connect(dest);
+  const type = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
+    .find(t => MediaRecorder.isTypeSupported(t)) || '';
+  const stream = new MediaStream([...$('cv').captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  recorder = new MediaRecorder(stream, { mimeType: type || undefined, videoBitsPerSecond: 5e6 });
+  const chunks = []; recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => {
+    outFile = new File(chunks, `1960-birthday-${name}.${type.startsWith('video/mp4') ? 'mp4' : 'webm'}`, { type: type || 'video/webm' });
+    const share = navigator.canShare?.({ files: [outFile] });
+    $('share').hidden = false; $('share').textContent = (share ? '📤 보내기 / 저장: ' : '💾 다시 저장: ') + outFile.name;
+    status(`동영상 파일 준비 완료 (${(outFile.size / 1e6).toFixed(1)} MB). ${share ? '아래 버튼으로 카톡·AirDrop 등으로 보내세요.' : '다운로드 폴더에 저장되었습니다.'}`);
+    if (!share) download(outFile);
+  };
+}
+function download(f) { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); }
+$('share').onclick = () => navigator.canShare?.({ files: [outFile] }) ? navigator.share({ files: [outFile], title: '1960 Birthday' }).catch(() => {}) : download(outFile);
 </script>
 </body>
 </html>
